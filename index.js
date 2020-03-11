@@ -10,13 +10,15 @@ import Stamen from "ol/source/Stamen";
 import VectorSource from "ol/source/Vector";
 import { Map, View } from "ol/index";
 
+var serializer = new XMLSerializer();
 var kmlDoc = document.implementation.createDocument(
-  "http://www.opengis.net/kml/2.2",
+  "http://earth.google.com/kml/2.0",
   "kml",
   null
 );
 
 var documentElement = kmlDoc.createElement("Document");
+documentElement.removeAttribute("xmlns");
 kmlDoc.documentElement.appendChild(documentElement);
 
 var documentNameElement = kmlDoc.createElement("name");
@@ -42,8 +44,9 @@ $(document).ready(function() {
 
   var vector = new HeatmapLayer({
     source: new VectorSource({
-      url: kmlDoc,
-      //url: "data/kml/2012_Earthquakes_Mag5.kml",
+      url:
+        '<?xml version="1.0" encoding="UTF-8"?>' +
+        serializer.serializeToString(kmlDoc).replace(' xmlns=""', ""),
       format: new KML({
         extractStyles: false
       })
@@ -55,7 +58,7 @@ $(document).ready(function() {
       //var name = feature.get("name");
       //var magnitude = parseFloat(name.substr(2));
       //return magnitude - 5;
-      alert(feature.get("name"));
+      console.log(feature.get("name"));
       return feature.get("name");
     }
   });
@@ -79,12 +82,15 @@ $(document).ready(function() {
 
   $("#addPoint").click(function() {
     var placemarkElement = kmlDoc.createElement("Placemark");
+    placemarkElement.setAttribute("id", $("#datetime").val());
 
     var nameElement = kmlDoc.createElement("name");
     var name = kmlDoc.createTextNode($("#dbm").val());
 
-    var pointElement = kmlDoc.createElement("point");
-    var point = kmlDoc.createTextNode($("#lat").val() + "," + $("#long").val());
+    var coordinatesElement = kmlDoc.createElement("coordinates");
+    var coordinates = kmlDoc.createTextNode(
+      $("#lat").val() + "," + $("#long").val() + ",0"
+    );
 
     var descriptionElement = kmlDoc.createElement("description");
     var description = kmlDoc.createTextNode($("#remarks").val());
@@ -95,15 +101,17 @@ $(document).ready(function() {
     var buildingElement = kmlDoc.createElement("building");
     var building = kmlDoc.createTextNode($("#building").val());
 
-    var datetimeElement = kmlDoc.createElement("datetime");
-    var datetime = kmlDoc.createTextNode($("#datetime").val());
+    //<magnitude>5.9</magnitude>
 
     // append nodes to parents
     nameElement.appendChild(name);
     placemarkElement.appendChild(nameElement);
 
-    pointElement.appendChild(point);
+    var pointElement = kmlDoc.createElement("Point");
     placemarkElement.appendChild(pointElement);
+
+    coordinatesElement.appendChild(coordinates);
+    pointElement.appendChild(coordinatesElement);
 
     descriptionElement.appendChild(description);
     placemarkElement.appendChild(descriptionElement);
@@ -113,9 +121,6 @@ $(document).ready(function() {
 
     buildingElement.appendChild(building);
     placemarkElement.appendChild(buildingElement);
-
-    datetimeElement.appendChild(datetime);
-    placemarkElement.appendChild(datetimeElement);
 
     // Append to document
     folderElement.appendChild(placemarkElement);
@@ -129,9 +134,10 @@ $(document).ready(function() {
     source.refresh();
 
     ///////////////////////////
-
-    var serializer = new XMLSerializer();
-    alert(serializer.serializeToString(kmlDoc));
+    var res =
+      '<?xml version="1.0" encoding="UTF-8"?>' +
+      serializer.serializeToString(kmlDoc).replace(' xmlns=""', "");
+    console.log(res);
   });
 
   map.on("click", function(event) {
@@ -141,8 +147,11 @@ $(document).ready(function() {
       alert(coordinate);
     } else {
       //Not known, lets show the form
+
+      var newDatetime = new Date();
       document.getElementById("long").value = event.coordinate[0];
       document.getElementById("lat").value = event.coordinate[1];
+      document.getElementById("datetime").value = newDatetime.toISOString();
       $("#newlocation").modal("show");
     }
   });
