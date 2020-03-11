@@ -1,6 +1,7 @@
 {
   "name": "heatmap-earthquakes",
   "dependencies": {
+    "jquery": "3.4.0",
     "ol": "6.2.1"
   },
   "devDependencies": {

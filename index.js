@@ -7,7 +7,7 @@ import {
 import { Heatmap as HeatmapLayer, Tile as TileLayer } from "ol/layer";
 import Stamen from "ol/source/Stamen";
 import VectorSource from "ol/source/Vector";
-import { Map, View, Feature, Overlay } from "ol/index";
+import { Map, View } from "ol/index";
 
 var doc = document.implementation.createDocument(
   "http://www.opengis.net/kml/2.2",
@@ -34,7 +34,6 @@ $(document).ready(function() {
       var name = feature.get("name");
       var magnitude = parseFloat(name.substr(2));
       return magnitude - 5;
-      //return feature.get("name");
     }
   });
 
@@ -51,7 +50,7 @@ $(document).ready(function() {
 
     view: new View({
       center: [0, 0],
-      zoom: 3
+      zoom: 2
     })
   });
 
