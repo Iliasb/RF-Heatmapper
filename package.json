@@ -1,5 +1,5 @@
 {
-  "name": "heatmap-earthquakes",
+  "name": "rf-heatmapper",
   "dependencies": {
     "jquery": "3.4.0",
     "ol": "6.2.1"
