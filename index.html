@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>RF Heatmap</title>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <meta name="description" content="RF heatmapping tool" />
+    <meta name="author" content="Ilias Barthelemy ON3ILI" />
+    <!-- The line below is only needed for old environments like Internet Explorer and Android 4.x -->
+    <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=fetch,requestAnimationFrame,Element.prototype.classList,URL"></script>
+    <script
+      src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+      integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+      integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+      integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+      crossorigin="anonymous"
+    ></script>
+    <link rel="stylesheet" type="text/css" href="main.css" />
+    <link
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+      crossorigin="anonymous"
+    />
+  </head>
+  <body>
+    <header>
+      <!-- Fixed navbar -->
+      <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+        <a class="navbar-brand" href="#">RF Heatmapper</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-toggle="collapse"
+          data-target="#navbarCollapse"
+          aria-controls="navbarCollapse"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarCollapse">
+          <ul class="navbar-nav mr-auto">
+            <li class="nav-item dropdown">
+              <a
+                class="nav-link dropdown-toggle"
+                data-toggle="dropdown"
+                href="#"
+                role="button"
+                aria-haspopup="true"
+                aria-expanded="false"
+                >File</a
+              >
+              <div class="dropdown-menu">
+                <a class="dropdown-item" href="/">New</a>
+                <a class="dropdown-item" href="#">Open</a>
+                <a class="dropdown-item" href="#">Save</a>
+                <a class="dropdown-item" href="#">Export as image</a>
+              </div>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#">Help</a>
+            </li>
+          </ul>
+          <span class="text-white"
+            >Press shift + left mouse button to rotate and zoom the map.</span
+          >
+        </div>
+      </nav>
+    </header>
+
+    <main role="main" class="flex-shrink-0">
+      <div class="container-fluid">
+        <div id="map" class="map"></div>
+      </div>
+    </main>
+    <footer class="footer bg-dark">
+      <div class="container">
+        <div class="form-row">
+          <div class="col">
+            <label class="text-white">Radius</label>
+            <input
+              class="form-control-range"
+              id="radius"
+              type="range"
+              min="1"
+              max="50"
+              step="1"
+              value="5"
+            />
+          </div>
+          <div class="col">
+            <label class="text-white">Blur</label>
+            <input
+              class="form-control-range"
+              id="blur"
+              type="range"
+              min="1"
+              max="50"
+              step="1"
+              value="15"
+            />
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <div
+      class="modal fade"
+      id="newlocation"
+      data-backdrop="static"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="staticBackdropLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="staticBackdropLabel">Add location</h5>
+            <button
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="formControlRange">DBm Value</label>
+              <div class="progress">
+                <div
+                  class="progress-bar  bg-danger"
+                  role="progressbar"
+                  style="width: 12%"
+                ></div>
+                <div
+                  class="progress-bar bg-warning"
+                  role="progressbar"
+                  style="width: 12%"
+                ></div>
+                <div
+                  class="progress-bar bg-success"
+                  role="progressbar"
+                  style="width: 12%"
+                ></div>
+                <div
+                  class="progress-bar bg-info"
+                  role="progressbar"
+                  style="width: 64%"
+                ></div>
+              </div>
+              <input
+                type="range"
+                class="form-control-range"
+                id="dbm"
+                aria-describedby="dbmHelp"
+                min="-120"
+                max="30"
+                step="1"
+                value="-90"
+              />
+              <small id="dbmHelp" class="form-text text-muted"></small>
+            </div>
+            <input type="hidden" class="form-control" id="long" />
+            <input type="hidden" class="form-control" id="lat" />
+
+            <div class="form-group">
+              <label for="weather">Weather conditions</label>
+              <select class="custom-select my-1 mr-sm-2" id="weather">
+                <option value="Storm">Storm</option>
+                <option value="Heavy rain">Heavy rain</option>
+                <option value="Rain">Rain</option>
+                <option value="Drizzle">Drizzle</option>
+                <option selected value="Clear skeyes">Clear skeyes</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="building">Location</label>
+              <select class="custom-select my-1 mr-sm-2" id="building">
+                <option selected value="Outside">Outside</option>
+                <option value="In vehicle">In vehicle</option>
+                <option value="Wooden building">Wooden building</option>
+                <option value="Concrete building">Concrete building</option>
+                <option value="Metal building">Metal building</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="remarks">Remarks</label>
+              <input
+                type="text"
+                class="form-control"
+                id="remarks"
+                aria-describedby="remarksHelp"
+              />
+              <small id="remarksHelp" class="form-text text-muted"
+                >Extreme conditions, sources of interference, ...</small
+              >
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-dismiss="modal"
+            >
+              Cancel
+            </button>
+            <button type="button" id="addPoint" class="btn btn-primary">
+              Add location
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="index.js"></script>
+  </body>
+</html>
