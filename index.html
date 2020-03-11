@@ -2,7 +2,7 @@
 <html lang="en" enc>
   <head>
     <title>RF Heatmap</title>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1, shrink-to-fit=no"
@@ -69,8 +69,21 @@
                 <a class="dropdown-item" href="#">Export as image</a>
               </div>
             </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#">Help</a>
+            <li class="nav-item dropdown">
+              <a
+                class="nav-link dropdown-toggle"
+                data-toggle="dropdown"
+                href="#"
+                role="button"
+                aria-haspopup="true"
+                aria-expanded="false"
+                >Help</a
+              >
+              <div class="dropdown-menu">
+                <a class="dropdown-item" href="#">Documentation</a>
+                <a class="dropdown-item" href="#">Updates</a>
+                <a class="dropdown-item" href="#">Attributions & About</a>
+              </div>
             </li>
           </ul>
           <span class="text-white"
@@ -178,6 +191,7 @@
             </div>
             <input type="hidden" class="form-control" id="long" />
             <input type="hidden" class="form-control" id="lat" />
+            <input type="hidden" class="form-control" id="datetime" />
 
             <div class="form-group">
               <label for="weather">Weather conditions</label>
