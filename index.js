@@ -1,14 +1,25 @@
 import "ol/ol.css";
+import Geolocation from "ol/Geolocation";
 import KML from "ol/format/KML";
-import GeoJSON from "ol/format/GeoJSON";
+//import GeoJSON from "ol/format/GeoJSON";
 import {
   defaults as defaultInteractions,
-  DragRotateAndZoom
+  DragRotateAndZoom,
+  FullScreen
 } from "ol/interaction";
-import { Heatmap as HeatmapLayer, Tile as TileLayer } from "ol/layer";
+import {
+  Heatmap as HeatmapLayer,
+  Tile as TileLayer,
+  Vector as VectorLayer
+} from "ol/layer";
 import Stamen from "ol/source/Stamen";
 import VectorSource from "ol/source/Vector";
-import { Map, View } from "ol/index";
+import Map from "ol/Map";
+import View from "ol/View";
+import Feature from "ol/Feature";
+import { Circle as CircleStyle, Fill, Stroke, Style } from "ol/style";
+import Point from "ol/geom/Point";
+import { toPng } from "html-to-image";
 
 var serializer = new XMLSerializer();
 var kmlDoc = document.implementation.createDocument(
@@ -69,15 +80,58 @@ $(document).ready(function() {
     })
   });
 
+  var view = new View({
+    center: [0, 0],
+    zoom: 2
+  });
+
   var map = new Map({
     layers: [raster, vector],
     interactions: defaultInteractions().extend([new DragRotateAndZoom()]),
     target: "map",
+    view: view
+  });
 
-    view: new View({
-      center: [0, 0],
-      zoom: 2
-    })
+  var geolocation = new Geolocation({
+    // enableHighAccuracy must be set to true to have the heading value.
+    trackingOptions: {
+      enableHighAccuracy: true
+    },
+    projection: view.getProjection()
+  });
+
+  geolocation.setTracking(true);
+
+  $(".footer").click(function() {
+    map.setView(
+      new View({
+        center: geolocation.getPosition(),
+        zoom: 15
+      })
+    );
+  });
+
+  $("#settings").click(function() {
+    $("#settingsModal").modal("show");
+  });
+
+  $("#export-png").click(function() {
+    var exportOptions = {
+      filter: function(element) {
+        return element.className
+          ? element.className.indexOf("ol-control") === -1
+          : true;
+      }
+    };
+
+    map.once("rendercomplete", function() {
+      toPng(map.getTargetElement(), exportOptions).then(function(dataURL) {
+        var link = document.getElementById("image-download");
+        link.href = dataURL;
+        link.click();
+      });
+    });
+    map.renderSync();
   });
 
   $("#addPoint").click(function() {
@@ -154,6 +208,60 @@ $(document).ready(function() {
       document.getElementById("datetime").value = newDatetime.toISOString();
       $("#newlocation").modal("show");
     }
+  });
+
+  // update the HTML page when the position changes.
+  geolocation.on("change", function() {
+    document.getElementById("accuracy").innerText =
+      geolocation.getAccuracy() + " [m]";
+    document.getElementById("altitude").innerText =
+      geolocation.getAltitude() + " [m]";
+    document.getElementById("altitudeAccuracy").innerText =
+      geolocation.getAltitudeAccuracy() + " [m]";
+    document.getElementById("heading").innerText =
+      geolocation.getHeading() + " [rad]";
+    document.getElementById("speed").innerText =
+      geolocation.getSpeed() + " [m/s]";
+  });
+
+  // handle geolocation error.
+  geolocation.on("error", function(error) {
+    var info = document.getElementById("info");
+    info.innerHTML = error.message;
+    info.style.display = "";
+  });
+
+  var accuracyFeature = new Feature();
+  geolocation.on("change:accuracyGeometry", function() {
+    accuracyFeature.setGeometry(geolocation.getAccuracyGeometry());
+  });
+
+  var positionFeature = new Feature();
+  positionFeature.setStyle(
+    new Style({
+      image: new CircleStyle({
+        radius: 4,
+        fill: new Fill({
+          color: "#3399CC"
+        }),
+        stroke: new Stroke({
+          color: "#fff",
+          width: 1
+        })
+      })
+    })
+  );
+
+  geolocation.on("change:position", function() {
+    var coordinates = geolocation.getPosition();
+    positionFeature.setGeometry(coordinates ? new Point(coordinates) : null);
+  });
+
+  new VectorLayer({
+    map: map,
+    source: new VectorSource({
+      features: [accuracyFeature, positionFeature]
+    })
   });
 
   var slider = document.getElementById("dbm");
