@@ -1,78 +1,28 @@
 import "ol/ol.css";
 import Geolocation from "ol/Geolocation";
-import KML from "ol/format/KML";
+//import KML from "ol/format/KML";
 //import GeoJSON from "ol/format/GeoJSON";
 import {
   defaults as defaultInteractions,
-  DragRotateAndZoom,
-  FullScreen
+  DragRotateAndZoom
 } from "ol/interaction";
 import {
-  Heatmap as HeatmapLayer,
   Tile as TileLayer,
-  Vector as VectorLayer
+  Vector as VectorLayer,
+  Heatmap as HeatmapLayer
 } from "ol/layer";
 import Stamen from "ol/source/Stamen";
 import VectorSource from "ol/source/Vector";
 import Map from "ol/Map";
 import View from "ol/View";
 import Feature from "ol/Feature";
-import { Circle as CircleStyle, Fill, Stroke, Style } from "ol/style";
+import { Circle as CircleStyle, Fill, Stroke, Style, Icon } from "ol/style";
 import Point from "ol/geom/Point";
 import { toPng } from "html-to-image";
-
-var serializer = new XMLSerializer();
-var kmlDoc = document.implementation.createDocument(
-  "http://earth.google.com/kml/2.0",
-  "kml",
-  null
-);
-
-var documentElement = kmlDoc.createElement("Document");
-documentElement.removeAttribute("xmlns");
-kmlDoc.documentElement.appendChild(documentElement);
-
-var documentNameElement = kmlDoc.createElement("name");
-var documentname = kmlDoc.createTextNode("RF Heatmap");
-
-documentNameElement.appendChild(documentname);
-documentElement.appendChild(documentNameElement);
-
-var folderElement = kmlDoc.createElement("Folder");
-documentElement.appendChild(folderElement);
-
-var folderNameElement = kmlDoc.createElement("name");
-var foldername = kmlDoc.createTextNode("Heatmap export");
-
-folderNameElement.appendChild(foldername);
-folderElement.appendChild(folderNameElement);
-
-//https://stackoverflow.com/questions/3191179/generate-xml-document-in-memory-with-javascript
 
 $(document).ready(function() {
   var blur = document.getElementById("blur");
   var radius = document.getElementById("radius");
-
-  var vector = new HeatmapLayer({
-    source: new VectorSource({
-      url:
-        '<?xml version="1.0" encoding="UTF-8"?>' +
-        serializer.serializeToString(kmlDoc).replace(' xmlns=""', ""),
-      format: new KML({
-        extractStyles: false
-      })
-    }),
-
-    blur: parseInt(blur.value, 10),
-    radius: parseInt(radius.value, 10),
-    weight: function(feature) {
-      //var name = feature.get("name");
-      //var magnitude = parseFloat(name.substr(2));
-      //return magnitude - 5;
-      console.log(feature.get("name"));
-      return feature.get("name");
-    }
-  });
 
   var raster = new TileLayer({
     source: new Stamen({
@@ -86,7 +36,7 @@ $(document).ready(function() {
   });
 
   var map = new Map({
-    layers: [raster, vector],
+    layers: [raster],
     interactions: defaultInteractions().extend([new DragRotateAndZoom()]),
     target: "map",
     view: view
@@ -134,64 +84,47 @@ $(document).ready(function() {
     map.renderSync();
   });
 
-  $("#addPoint").click(function() {
-    var placemarkElement = kmlDoc.createElement("Placemark");
-    placemarkElement.setAttribute("id", $("#datetime").val());
-
-    var nameElement = kmlDoc.createElement("name");
-    var name = kmlDoc.createTextNode($("#dbm").val());
-
-    var coordinatesElement = kmlDoc.createElement("coordinates");
-    var coordinates = kmlDoc.createTextNode(
-      $("#lat").val() + "," + $("#long").val() + ",0"
-    );
-
-    var descriptionElement = kmlDoc.createElement("description");
-    var description = kmlDoc.createTextNode($("#remarks").val());
-
-    var weatherElement = kmlDoc.createElement("weather");
-    var weather = kmlDoc.createTextNode($("#weather").val());
-
-    var buildingElement = kmlDoc.createElement("building");
-    var building = kmlDoc.createTextNode($("#building").val());
-
-    //<magnitude>5.9</magnitude>
-
-    // append nodes to parents
-    nameElement.appendChild(name);
-    placemarkElement.appendChild(nameElement);
-
-    var pointElement = kmlDoc.createElement("Point");
-    placemarkElement.appendChild(pointElement);
-
-    coordinatesElement.appendChild(coordinates);
-    pointElement.appendChild(coordinatesElement);
-
-    descriptionElement.appendChild(description);
-    placemarkElement.appendChild(descriptionElement);
-
-    weatherElement.appendChild(weather);
-    placemarkElement.appendChild(weatherElement);
-
-    buildingElement.appendChild(building);
-    placemarkElement.appendChild(buildingElement);
-
-    // Append to document
-    folderElement.appendChild(placemarkElement);
+  var heatmap = $("#addPoint").click(function() {
     // Close the modal
     $("#newlocation").modal("hide");
     // Clear the remarks field of the form
     $("#remarks").val("");
 
-    // Render the new kml object
-    var source = vector.getSource();
-    source.refresh();
+    var pointFeature = new Feature();
+    pointFeature.set("name", $("#name").val());
+    pointFeature.set("power", $("#dbm").val());
+    pointFeature.set("type", $("#type").val());
+    pointFeature.set("weather", $("#weather").val());
+    pointFeature.set("building", $("#building").val());
+    pointFeature.set("datetime", $("#datetime").val());
+    pointFeature.set("remarks", $("#remarks").val());
+    pointFeature.setStyle(
+      new Style({
+        image: new CircleStyle({
+          radius: 6,
+          fill: new Fill({
+            color: "#3399CC"
+          }),
+          stroke: new Stroke({
+            color: "#fff",
+            width: 2
+          })
+        })
+      })
+    );
 
-    ///////////////////////////
-    var res =
-      '<?xml version="1.0" encoding="UTF-8"?>' +
-      serializer.serializeToString(kmlDoc).replace(' xmlns=""', "");
-    console.log(res);
+    var coordinates = [$("#long").val(), $("#lat").val()];
+    pointFeature.setGeometry(coordinates ? new Point(coordinates) : null);
+
+    var heatmap = new HeatmapLayer({
+      map: map,
+      source: new VectorSource({
+        features: [pointFeature]
+      }),
+      blur: parseInt(blur.value, 10),
+      radius: parseInt(radius.value, 10) + parseInt($("#dbm").val(), 10) + 90
+    });
+    return heatmap;
   });
 
   map.on("click", function(event) {
@@ -199,12 +132,14 @@ $(document).ready(function() {
     if (feature) {
       var coordinate = feature.getGeometry().getCoordinates();
       alert(coordinate);
+      alert(feature.get("name"));
     } else {
       //Not known, lets show the form
 
       var newDatetime = new Date();
       document.getElementById("long").value = event.coordinate[0];
       document.getElementById("lat").value = event.coordinate[1];
+      document.getElementById("alt").value = event.coordinate[2];
       document.getElementById("datetime").value = newDatetime.toISOString();
       $("#newlocation").modal("show");
     }
@@ -226,28 +161,19 @@ $(document).ready(function() {
 
   // handle geolocation error.
   geolocation.on("error", function(error) {
-    var info = document.getElementById("info");
+    var info = document.getElementById("footer");
     info.innerHTML = error.message;
     info.style.display = "";
-  });
-
-  var accuracyFeature = new Feature();
-  geolocation.on("change:accuracyGeometry", function() {
-    accuracyFeature.setGeometry(geolocation.getAccuracyGeometry());
   });
 
   var positionFeature = new Feature();
   positionFeature.setStyle(
     new Style({
-      image: new CircleStyle({
-        radius: 4,
-        fill: new Fill({
-          color: "#3399CC"
-        }),
-        stroke: new Stroke({
-          color: "#fff",
-          width: 1
-        })
+      image: new Icon({
+        anchor: [0.5, 0.5],
+        opacity: 0.8,
+        scale: 1,
+        src: "img/user.svg"
       })
     })
   );
@@ -260,7 +186,7 @@ $(document).ready(function() {
   new VectorLayer({
     map: map,
     source: new VectorSource({
-      features: [accuracyFeature, positionFeature]
+      features: [positionFeature]
     })
   });
 
@@ -274,13 +200,13 @@ $(document).ready(function() {
   };
 
   var blurHandler = function() {
-    vector.setBlur(parseInt(blur.value, 10));
+    //vector.setBlur(parseInt(blur.value, 10));
   };
   blur.addEventListener("input", blurHandler);
   blur.addEventListener("change", blurHandler);
 
   var radiusHandler = function() {
-    vector.setRadius(parseInt(radius.value, 10));
+    //vector.setRadius(parseInt(radius.value, 10));
   };
   radius.addEventListener("input", radiusHandler);
   radius.addEventListener("change", radiusHandler);
