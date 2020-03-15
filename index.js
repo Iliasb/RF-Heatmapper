@@ -109,10 +109,12 @@ $(document).ready(function() {
     return power;
   }
 
+
   var popup = new Overlay({
     element: document.getElementById("popup")
   });
   var element = popup.getElement();
+
 
   // Add feature to the map when user completes form
   $("#addPoint").click(function() {
