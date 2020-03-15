@@ -170,6 +170,8 @@ $(document).ready(function() {
           feature.get("remarks") +
           "</code></p>"
       });
+
+      //test
       $(element).popover("show");
     } else {
       //Not known, lets show the form
