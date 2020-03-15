@@ -19,6 +19,8 @@ ON3ILI
 
 Upcoming:
   - Import and save files to KML or GeoJson format
+  - Import map
+  - Connect SDR or Radio to retrieve DBm values
 
 ### Tech
 
@@ -28,9 +30,18 @@ Rf-Heatmapper uses a number of open source projects to work properly:
 * [Twitter Bootstrap] - great UI boilerplate for modern web apps
 * [jQuery] 
 
+
+### Required Hardware
+
+Rf-Heatmapper runs on the browser.  You will need an internet connection.
+
+* Android Tablet or Smartphone
+* Laptop with GPS functionality
+
 ### Installation
 
 https://codesandbox.io/s/github/Iliasb/RF-Heatmapper
+TODO
 
 ### Development
 
