@@ -1,7 +1,7 @@
 import "ol/ol.css";
 import Geolocation from "ol/Geolocation";
 //import KML from "ol/format/KML";
-//import GeoJSON from "ol/format/GeoJSON";
+import GeoJSON from "ol/format/GeoJSON";
 import {
   defaults as defaultInteractions,
   DragRotateAndZoom
@@ -75,6 +75,19 @@ $(document).ready(function() {
     $("#settingsModal").modal("show");
   });
 
+  $("#export-geojson").click(function() {
+    var writer = new GeoJSON();
+    var geojsonStr = writer.writeFeatures(heatmapSource.getFeatures());
+
+    var dataStr =
+      "data:text/json;charset=utf-8," + encodeURIComponent(geojsonStr);
+    var dlAnchorElem = document.getElementById("geojson-download");
+    dlAnchorElem.setAttribute("href", dataStr);
+    dlAnchorElem.setAttribute("download", "map.json");
+    dlAnchorElem.click();
+    s;
+  });
+
   //Export PNG file
   $("#export-png").click(function() {
     var exportOptions = {
@@ -109,12 +122,10 @@ $(document).ready(function() {
     return power;
   }
 
-
   var popup = new Overlay({
     element: document.getElementById("popup")
   });
   var element = popup.getElement();
-
 
   // Add feature to the map when user completes form
   $("#addPoint").click(function() {
