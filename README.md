@@ -4,6 +4,8 @@ https://github.com/Iliasb/RF-Heatmapper
 
 RF-Heatmapper is a client side Javascript based application allowing technicians and radio enthousiasts to make heatmaps from their surroundings.
 
+![Screenshot](https://raw.githubusercontent.com/Iliasb/RF-Heatmapper/master/example.png "Example")
+
 # New Features!
 
   - Geolocation
