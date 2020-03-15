@@ -15,7 +15,7 @@ Upcoming:
 
 ### Tech
 
-Dillinger uses a number of open source projects to work properly:
+Rf-Heatmapper uses a number of open source projects to work properly:
 
 * [Openlayers]
 * [Twitter Bootstrap] - great UI boilerplate for modern web apps
