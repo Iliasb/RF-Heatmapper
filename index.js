@@ -85,7 +85,50 @@ $(document).ready(function() {
     dlAnchorElem.setAttribute("href", dataStr);
     dlAnchorElem.setAttribute("download", "map.json");
     dlAnchorElem.click();
-    s;
+  });
+
+  $("#import").click(function() {
+    $("#importModal").modal("show");
+  });
+
+  $("#importAction").click(function() {
+    var regex = /^([a-zA-Z0-9\s_\\.\-:])+(.json)$/;
+    if (
+      regex.test(
+        $("#upload")
+          .val()
+          .toLowerCase()
+      )
+    ) {
+      if (typeof FileReader !== "undefined") {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          var jsonDoc = $.parseJSON(e.target.result);
+          $.each(jsonDoc.features, function(key, val) {
+            //do something
+
+            var pointFeature = new Feature();
+            pointFeature.set("power", val.properties.power);
+            pointFeature.set("type", val.properties.type);
+            pointFeature.set("weather", val.properties.weather);
+            pointFeature.set("building", val.properties.building);
+            pointFeature.set("datetime", val.properties.datetime);
+            pointFeature.set("remarks", val.properties.remarks);
+            var coordinates = val.geometry.coordinates;
+            pointFeature.setGeometry(
+              coordinates ? new Point(coordinates) : null
+            );
+            pointFeature.set("weight", lookupWeight(val.properties.weight));
+            heatmapSource.addFeature(pointFeature);
+          });
+        };
+        reader.readAsText($("#upload")[0].files[0]);
+      } else {
+        alert("This browser does not support HTML5.");
+      }
+    } else {
+      alert("Please upload a valid GeoJson file.");
+    }
   });
 
   //Export PNG file

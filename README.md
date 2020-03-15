@@ -13,30 +13,29 @@ ON3ILI
 
 # New Features!
 
-  - Geolocation
-  - Adjustable blur and radius parameters
-
+- Geolocation
+- Adjustable blur and radius parameters
+- Import and save files to KML or GeoJson format
 
 Upcoming:
-  - Import and save files to KML or GeoJson format
-  - Import map
-  - Connect SDR or Radio to retrieve DBm values
+
+- Import map
+- Connect SDR or Radio to retrieve DBm values
 
 ### Tech
 
 Rf-Heatmapper uses a number of open source projects to work properly:
 
-* [Openlayers]
-* [Twitter Bootstrap] - great UI boilerplate for modern web apps
-* [jQuery] 
-
+- [Openlayers]
+- [Twitter Bootstrap] - great UI boilerplate for modern web apps
+- [jQuery]
 
 ### Required Hardware
 
-Rf-Heatmapper runs on the browser.  You will need an internet connection.
+Rf-Heatmapper runs on the browser. You will need an internet connection.
 
-* Android Tablet or Smartphone
-* Laptop with GPS functionality
+- Android Tablet or Smartphone
+- Laptop with GPS functionality
 
 ### Installation
 
@@ -47,9 +46,6 @@ TODO
 
 Want to contribute? Great!
 
-
-
-License
-----
+## License
 
 MIT
