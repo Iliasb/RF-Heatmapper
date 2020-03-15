@@ -22,6 +22,12 @@ import Point from "ol/geom/Point";
 import { toPng } from "html-to-image";
 
 $(document).ready(function() {
+  // Display message when user leaves the page
+  $(window).bind("beforeunload", function() {
+    return "Don't forget to save your data ;)";
+  });
+
+  // Some variables for the heatmap (Found in settings)
   var blur = document.getElementById("blur");
   var radius = document.getElementById("radius");
 
@@ -43,6 +49,7 @@ $(document).ready(function() {
     view: view
   });
 
+  //Geolocation on page load
   var geolocation = new Geolocation({
     // enableHighAccuracy must be set to true to have the heading value.
     trackingOptions: {
@@ -53,6 +60,7 @@ $(document).ready(function() {
 
   geolocation.setTracking(true);
 
+  //Center on current device location when clicked
   $(".footer").click(function() {
     map.setView(
       new View({
@@ -62,10 +70,12 @@ $(document).ready(function() {
     );
   });
 
+  //Show settings
   $("#settings").click(function() {
     $("#settingsModal").modal("show");
   });
 
+  //Export PNG file
   $("#export-png").click(function() {
     var exportOptions = {
       filter: function(element) {
@@ -85,15 +95,21 @@ $(document).ready(function() {
     map.renderSync();
   });
 
-  var heatpmapSource = new VectorSource({});
-
-  var heatpmapLayer = new HeatmapLayer({
+  // Create heatmap
+  var heatmapSource = new VectorSource({});
+  var heatmapLayer = new HeatmapLayer({
     map: map,
-    source: heatpmapSource,
+    source: heatmapSource,
     blur: parseInt(blur.value, 10),
-    radius: parseInt(radius.value, 10) + parseInt($("#dbm").val(), 10) + 90
+    radius: parseInt(radius.value, 10)
   });
 
+  function lookupWeight(power) {
+    power = (parseFloat(power) + 120) / 100;
+    return power;
+  }
+
+  // Add feature to the map when user completes form
   $("#addPoint").click(function() {
     // Close the modal
     $("#newlocation").modal("hide");
@@ -109,9 +125,11 @@ $(document).ready(function() {
     pointFeature.set("remarks", $("#remarks").val());
     var coordinates = [$("#long").val(), $("#lat").val()];
     pointFeature.setGeometry(coordinates ? new Point(coordinates) : null);
-    heatpmapSource.addFeature(pointFeature);
+    pointFeature.set("weight", lookupWeight($("#dbm").val()));
+    heatmapSource.addFeature(pointFeature);
   });
 
+  // Display information about feature or add new feature to the map
   map.on("click", function(event) {
     var feature = map.getFeaturesAtPixel(event.pixel)[0];
     if (feature) {
@@ -123,6 +141,7 @@ $(document).ready(function() {
 
       var element = popup.getElement();
       $(element).popover("hide");
+      $(element).data("bs.popover", null);
       popup.setPosition(coordinate);
 
       $(element).popover({
@@ -183,30 +202,51 @@ $(document).ready(function() {
     info.style.display = "";
   });
 
+  // Show current user location
   var positionFeature = new Feature();
   positionFeature.setStyle(
     new Style({
+      zIndex: 101,
       image: new Icon({
         anchor: [0.5, 0.5],
         opacity: 0.8,
-        scale: 1,
+        scale: 0.8,
         src: "img/user.svg"
+      })
+    })
+  );
+
+  var backgroundFeature = new Feature();
+  backgroundFeature.setStyle(
+    new Style({
+      zIndex: 100,
+      image: new CircleStyle({
+        radius: 14,
+        fill: new Fill({
+          color: "rgba(0, 60, 136, 0.5)"
+        }),
+        stroke: new Stroke({
+          color: "rgba(255, 255, 255, 0.5)",
+          width: 4
+        })
       })
     })
   );
 
   geolocation.on("change:position", function() {
     var coordinates = geolocation.getPosition();
+    backgroundFeature.setGeometry(coordinates ? new Point(coordinates) : null);
     positionFeature.setGeometry(coordinates ? new Point(coordinates) : null);
   });
 
   new VectorLayer({
     map: map,
     source: new VectorSource({
-      features: [positionFeature]
+      features: [backgroundFeature, positionFeature]
     })
   });
 
+  // Fancy slider for the feature form (Add lcoation)
   var slider = document.getElementById("dbm");
   var output = document.getElementById("dbmHelp");
   output.innerHTML = slider.value + " DBm"; // Display the default slider value
@@ -216,14 +256,15 @@ $(document).ready(function() {
     output.innerHTML = this.value + " DBm";
   };
 
+  // Event handlers for the settings
   var blurHandler = function() {
-    heatpmapLayer.setBlur(parseInt(blur.value, 10));
+    heatmapLayer.setBlur(parseInt(blur.value, 10));
   };
   blur.addEventListener("input", blurHandler);
   blur.addEventListener("change", blurHandler);
 
   var radiusHandler = function() {
-    heatpmapLayer.setRadius(parseInt(radius.value, 10));
+    heatmapLayer.setRadius(parseInt(radius.value, 10));
   };
   radius.addEventListener("input", radiusHandler);
   radius.addEventListener("change", radiusHandler);
