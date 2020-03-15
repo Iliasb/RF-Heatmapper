@@ -12,5 +12,7 @@
   "scripts": {
     "start": "parcel index.html",
     "build": "parcel build --experimental-scope-hoisting --public-url . index.html"
-  }
+  },
+  "keywords": [],
+  "description": ""
 }
