@@ -109,6 +109,13 @@ $(document).ready(function() {
     return power;
   }
 
+
+  var popup = new Overlay({
+    element: document.getElementById("popup")
+  });
+  var element = popup.getElement();
+
+
   // Add feature to the map when user completes form
   $("#addPoint").click(function() {
     // Close the modal
@@ -134,12 +141,9 @@ $(document).ready(function() {
     var feature = map.getFeaturesAtPixel(event.pixel)[0];
     if (feature) {
       var coordinate = feature.getGeometry().getCoordinates();
-      var popup = new Overlay({
-        element: document.getElementById("popup")
-      });
+
       map.addOverlay(popup);
 
-      var element = popup.getElement();
       $(element).popover("hide");
       $(element).data("bs.popover", null);
       popup.setPosition(coordinate);
@@ -168,9 +172,13 @@ $(document).ready(function() {
           feature.get("remarks") +
           "</code></p>"
       });
+
+      //test
       $(element).popover("show");
     } else {
       //Not known, lets show the form
+      $(element).popover("hide");
+      $(element).data("bs.popover", null);
 
       var newDatetime = new Date();
       document.getElementById("long").value = event.coordinate[0];
