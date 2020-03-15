@@ -15,7 +15,7 @@ ON3ILI
 
 - Geolocation
 - Adjustable blur and radius parameters
-- Import and save files to KML or GeoJson format
+- Import and save files to GeoJson format
 
 Upcoming:
 
