@@ -13,6 +13,7 @@ import {
 } from "ol/layer";
 import Stamen from "ol/source/Stamen";
 import VectorSource from "ol/source/Vector";
+import Overlay from "ol/Overlay";
 import Map from "ol/Map";
 import View from "ol/View";
 import Feature from "ol/Feature";
@@ -84,55 +85,71 @@ $(document).ready(function() {
     map.renderSync();
   });
 
-  var heatmap = $("#addPoint").click(function() {
+  var heatpmapSource = new VectorSource({});
+
+  var heatpmapLayer = new HeatmapLayer({
+    map: map,
+    source: heatpmapSource,
+    blur: parseInt(blur.value, 10),
+    radius: parseInt(radius.value, 10) + parseInt($("#dbm").val(), 10) + 90
+  });
+
+  $("#addPoint").click(function() {
     // Close the modal
     $("#newlocation").modal("hide");
     // Clear the remarks field of the form
     $("#remarks").val("");
 
     var pointFeature = new Feature();
-    pointFeature.set("name", $("#name").val());
     pointFeature.set("power", $("#dbm").val());
     pointFeature.set("type", $("#type").val());
     pointFeature.set("weather", $("#weather").val());
     pointFeature.set("building", $("#building").val());
     pointFeature.set("datetime", $("#datetime").val());
     pointFeature.set("remarks", $("#remarks").val());
-    pointFeature.setStyle(
-      new Style({
-        image: new CircleStyle({
-          radius: 6,
-          fill: new Fill({
-            color: "#3399CC"
-          }),
-          stroke: new Stroke({
-            color: "#fff",
-            width: 2
-          })
-        })
-      })
-    );
-
     var coordinates = [$("#long").val(), $("#lat").val()];
     pointFeature.setGeometry(coordinates ? new Point(coordinates) : null);
-
-    var heatmap = new HeatmapLayer({
-      map: map,
-      source: new VectorSource({
-        features: [pointFeature]
-      }),
-      blur: parseInt(blur.value, 10),
-      radius: parseInt(radius.value, 10) + parseInt($("#dbm").val(), 10) + 90
-    });
-    return heatmap;
+    heatpmapSource.addFeature(pointFeature);
   });
 
   map.on("click", function(event) {
     var feature = map.getFeaturesAtPixel(event.pixel)[0];
     if (feature) {
       var coordinate = feature.getGeometry().getCoordinates();
-      alert(coordinate);
-      alert(feature.get("name"));
+      var popup = new Overlay({
+        element: document.getElementById("popup")
+      });
+      map.addOverlay(popup);
+
+      var element = popup.getElement();
+      $(element).popover("hide");
+      popup.setPosition(coordinate);
+
+      $(element).popover({
+        placement: "top",
+        animation: false,
+        html: true,
+        content:
+          "<p>Coordinates: <code>" +
+          coordinate +
+          "</code></p>" +
+          "<p>Type: <code>" +
+          feature.get("type") +
+          "</code></p>" +
+          "<p>Power: <code>" +
+          feature.get("power") +
+          "</code></p>" +
+          "<p>Building: <code>" +
+          feature.get("building") +
+          "</code></p>" +
+          "<p>Weather: <code>" +
+          feature.get("weather") +
+          "</code></p>" +
+          "<p>Remarks: <code>" +
+          feature.get("remarks") +
+          "</code></p>"
+      });
+      $(element).popover("show");
     } else {
       //Not known, lets show the form
 
@@ -200,13 +217,13 @@ $(document).ready(function() {
   };
 
   var blurHandler = function() {
-    //vector.setBlur(parseInt(blur.value, 10));
+    heatpmapLayer.setBlur(parseInt(blur.value, 10));
   };
   blur.addEventListener("input", blurHandler);
   blur.addEventListener("change", blurHandler);
 
   var radiusHandler = function() {
-    //vector.setRadius(parseInt(radius.value, 10));
+    heatpmapLayer.setRadius(parseInt(radius.value, 10));
   };
   radius.addEventListener("input", radiusHandler);
   radius.addEventListener("change", radiusHandler);

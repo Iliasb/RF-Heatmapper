@@ -8,9 +8,19 @@
   overflow: hidden;
 }
 
+#popup {
+  display: hidden;
+}
+
 main > .container-fluid {
   padding: 55px 0px 0;
   margin: 0;
+}
+
+.popover p,
+.popover code {
+  padding: 0px;
+  margin: 0px;
 }
 
 .footer {
